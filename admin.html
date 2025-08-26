@@ -1,74 +1,64 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>لوحة التحكم - Admin</title>
 <style>
-body {
-    font-family:'Arial'; 
-    background: url('https://i.ibb.co/2N0gK1V/background.jpg') no-repeat center center fixed;
-    background-size: cover;
-    color:#fff; 
-    padding:20px; 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center;
-}
-input, textarea, button { 
-    margin:5px; 
-    padding:10px; 
-    border-radius:10px; 
-    border:none; 
-}
-.post { 
-    background: rgba(0,0,0,0.5); 
-    padding:10px; 
-    margin:10px; 
-    border-radius:10px; 
-    position:relative; 
-}
-.delete-btn { 
-    position:absolute; 
-    top:10px; 
-    right:10px; 
-    background:red; 
-    color:white; 
-    border-radius:5px; 
-    padding:5px; 
-    cursor:pointer; 
-}
+  :root{--accent:#00ff99;--dark:#002900}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background: linear-gradient(120deg,#003a1a,#006633);color:#fff;display:flex;flex-direction:column;align-items:center;padding:18px}
+  .card{width:100%;max-width:820px;background:rgba(0,0,0,0.22);padding:14px;border-radius:12px;margin:10px 0}
+  label{display:block;margin-top:8px;font-weight:700}
+  input,textarea,button{width:100%;padding:10px;border-radius:8px;border:none;box-sizing:border-box}
+  .row{display:flex;gap:10px}
+  .small{width:140px}
+  .post{background:rgba(0,0,0,0.45);padding:10px;margin:10px;border-radius:10px;position:relative}
+  .delete-btn{position:absolute;top:10px;right:10px;background:#ff4d4d;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
+  .user-item{padding:8px;background:rgba(255,255,255,0.06);border-radius:8px;margin:6px 0;cursor:pointer}
 </style>
 </head>
 <body>
 
-<h1>لوحة التحكم</h1>
+<h2>لوحة التحكم - النشر والإدارة</h2>
 
-<div id="loginPanel">
-<label>الاسم:</label>
-<input type="text" id="username"><br>
-<label>كلمة المرور:</label>
-<input type="password" id="userpass"><br>
-<button onclick="loginUser()">دخول</button>
+<div id="loginPanel" class="card">
+  <label>الاسم</label>
+  <input id="username" placeholder="اسمك هنا">
+  <label>كلمة المرور</label>
+  <input id="userpass" type="password" placeholder="أدخل كلمة المرور">
+  <div style="margin-top:10px">
+    <button id="loginBtn">دخول</button>
+  </div>
+  <p style="opacity:0.8;margin-top:8px;font-size:13px">كلمة المرور الحالية للتجربة: <b>1234</b></p>
 </div>
 
-<div id="publishPanel" style="display:none; width:100%; max-width:600px;">
-<h2>النشر</h2>
-<textarea id="postText" placeholder="نص المنشور"></textarea><br>
-<input type="text" id="postImg" placeholder="رابط الصورة (اختياري)"><br>
-<button onclick="addPost()">نشر</button>
+<div id="panel" style="display:none; width:100%;max-width:900px">
+  <div class="card">
+    <h3>نشر جديد</h3>
+    <label>نص المنشور</label>
+    <textarea id="postText" rows="4" placeholder="اكتب ما تريد"></textarea>
+    <label>رابط الصورة (اختياري)</label>
+    <input id="postImg" placeholder="https://.../image.jpg">
+    <div style="margin-top:10px"><button id="postBtn">نشر</button></div>
+  </div>
 
-<h3>الأسماء المسجلة بالدخول</h3>
-<div id="userList"></div>
+  <div class="card">
+    <h3>الأسماء المسجلة بالدخول (اضغط لحذف بعد إدخال كلمة حذف المدير)</h3>
+    <div id="userList"></div>
+  </div>
 
-<h3>البلاغات</h3>
-<div id="reportList"></div>
+  <div class="card">
+    <h3>البلاغات الواردة</h3>
+    <div id="reportList"></div>
+  </div>
 
-<h3>المنشورات</h3>
-<div id="postsContainer"></div>
+  <div class="card">
+    <h3>المنشورات (حذف مباشرة)</h3>
+    <div id="postsContainer"></div>
+  </div>
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -85,80 +75,95 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* كلمات المرور المختبرة */
 const publishPassword = '1234';
 const adminDeletePass = '12345678910';
-let currentUser='';
+let currentUser = null;
 
+/* عناصر DOM */
+const loginPanel = document.getElementById('loginPanel');
+const panel = document.getElementById('panel');
+const loginBtn = document.getElementById('loginBtn');
+const postBtn = document.getElementById('postBtn');
+
+loginBtn.addEventListener('click', loginUser);
+postBtn.addEventListener('click', addPost);
+
+/* تسجيل الدخول */
 function loginUser(){
-  const name=document.getElementById('username').value.trim();
-  const pass=document.getElementById('userpass').value.trim();
+  const name = document.getElementById('username').value.trim();
+  const pass = document.getElementById('userpass').value.trim();
   if(!name || !pass){ alert('أدخل الاسم وكلمة المرور'); return; }
   if(pass !== publishPassword){ alert('كلمة المرور خاطئة'); return; }
-  currentUser=name;
-  document.getElementById('loginPanel').style.display='none';
-  document.getElementById('publishPanel').style.display='block';
-  addUser(name); showPosts(); showUsers(); showReports();
-  alert('تم الدخول للوحة النشر!');
+  currentUser = name;
+  loginPanel.style.display = 'none';
+  panel.style.display = 'block';
+  // سجل المستخدم في قاعدة users
+  db.collection('users').doc(currentUser).set({ name: currentUser, ts: Date.now() });
+  startListeners();
+  alert('تم الدخول بنجاح — مرحباً ' + currentUser);
 }
 
-function addUser(name){
-  db.collection('users').doc(name).set({name});
-}
-
+/* نشر */
 function addPost(){
-  const text=document.getElementById('postText').value.trim();
-  const img=document.getElementById('postImg').value.trim();
+  const text = document.getElementById('postText').value.trim();
+  const img = document.getElementById('postImg').value.trim();
   if(!text){ alert('أدخل نص المنشور'); return; }
-  db.collection('posts').add({text,img,user:currentUser,time:Date.now()});
-  document.getElementById('postText').value='';
-  document.getElementById('postImg').value='';
+  db.collection('posts').add({ text, img, user: currentUser, time: Date.now() })
+    .then(()=>{ document.getElementById('postText').value=''; document.getElementById('postImg').value=''; })
+    .catch(e=>{ console.error(e); alert('خطأ في النشر'); });
 }
 
-function showPosts(){
-  const container=document.getElementById('postsContainer');
-  db.collection('posts').orderBy('time','desc').onSnapshot(snapshot=>{
-    container.innerHTML='';
-    snapshot.forEach(docSnap=>{
-      const post=docSnap.data();
-      const div=document.createElement('div'); div.className='post';
-      div.innerHTML=`<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}" style="max-width:100%; border-radius:10px;">` : ''}`;
-      const delBtn=document.createElement('button'); delBtn.className='delete-btn'; delBtn.innerText='حذف';
-      delBtn.onclick=()=>{ docSnap.ref.delete(); }
-      div.appendChild(delBtn);
-      container.appendChild(div);
+/* شغّل الليسنرات المباشرة */
+function startListeners(){
+  // المنشورات
+  db.collection('posts').orderBy('time','desc').onSnapshot(snap=>{
+    const container = document.getElementById('postsContainer'); container.innerHTML='';
+    snap.forEach(docSnap=>{
+      const p = docSnap.data();
+      const el = document.createElement('div'); el.className='post';
+      el.innerHTML = `<div style="opacity:0.9;font-size:13px">${p.user} • ${new Date(p.time).toLocaleString()}</div>
+                      <div style="margin-top:6px">${escapeHtml(p.text)}</div>
+                      ${p.img? `<img src="${p.img}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}`;
+      const del = document.createElement('button'); del.className='delete-btn'; del.textContent='حذف';
+      del.onclick = ()=> {
+        if(confirm('هل تريد حذف هذا المنشور؟')) db.collection('posts').doc(docSnap.id).delete();
+      };
+      el.appendChild(del);
+      container.appendChild(el);
+    });
+  });
+
+  // المستخدمون
+  db.collection('users').onSnapshot(snap=>{
+    const ulist = document.getElementById('userList'); ulist.innerHTML='';
+    snap.forEach(docSnap=>{
+      const u = docSnap.data();
+      const d = document.createElement('div'); d.className='user-item'; d.innerText = u.name;
+      d.onclick = ()=>{
+        const pass = prompt('أدخل كلمة مرور حذف المستخدم:');
+        if(pass === adminDeletePass){
+          db.collection('users').doc(docSnap.id).delete();
+        } else alert('كلمة مرور خاطئة.');
+      };
+      ulist.appendChild(d);
+    });
+  });
+
+  // البلاغات
+  db.collection('reports').orderBy('time','desc').onSnapshot(snap=>{
+    const rdiv = document.getElementById('reportList'); rdiv.innerHTML='';
+    snap.forEach(docSnap=>{
+      const r = docSnap.data();
+      const el = document.createElement('div'); el.style.padding='8px'; el.style.margin='6px 0'; el.style.background='rgba(255,255,255,0.04)';
+      el.innerHTML = `<b>${r.postUser}</b>: ${escapeHtml(r.text)} <br>السبب: ${escapeHtml(r.reason)} <br><small>${new Date(r.time).toLocaleString()}</small>`;
+      rdiv.appendChild(el);
     });
   });
 }
 
-function showUsers(){
-  const div=document.getElementById('userList');
-  db.collection('users').onSnapshot(snapshot=>{
-    div.innerHTML='';
-    snapshot.forEach(docSnap=>{
-      const user=docSnap.data().name;
-      const d=document.createElement('div'); d.innerText=user; d.style.cursor='pointer';
-      d.onclick=()=>{
-        if(prompt('أدخل كلمة مرور الحذف')===adminDeletePass){
-          docSnap.ref.delete();
-        }
-      }
-      div.appendChild(d);
-    });
-  });
-}
-
-function showReports(){
-  const div=document.getElementById('reportList');
-  db.collection('reports').onSnapshot(snapshot=>{
-    div.innerHTML='';
-    snapshot.forEach(docSnap=>{
-      const rep=docSnap.data();
-      const d=document.createElement('div');
-      d.innerHTML=`<b>${rep.postUser}</b>: ${rep.text}<br>السبب: ${rep.reason}`;
-      div.appendChild(d);
-    });
-  });
-}
+/* مساعدة لتأمين النص */
+function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 </script>
 </body>
 </html>

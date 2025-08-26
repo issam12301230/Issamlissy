@@ -3,27 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>موقع الأخبار والفعاليات</title>
+<title>موقعي الشخصي - أخبار وفعاليات</title>
 <style>
 body { font-family:'Arial',sans-serif; background: linear-gradient(135deg,#00ff99,#006622); color:#fff; padding:20px; margin:0; }
 header { text-align:center; padding:20px; background: rgba(0,0,0,0.3); border-radius:15px; margin-bottom:20px; }
 header a { color:#fff; font-weight:bold; text-decoration:none; }
 .post-container { display:flex; flex-direction:column; align-items:center; }
-.post { background: rgba(0,0,0,0.5); padding:15px; margin:10px; border-radius:15px; width:90%; max-width:600px; transition: transform 0.3s ease; }
-.post:hover { transform: scale(1.02); box-shadow:0 0 15px #0f0; }
+.post { background: rgba(0,0,0,0.5); padding:15px; margin:10px; border-radius:15px; position:relative; }
 .post img { max-width:100%; border-radius:10px; margin-top:5px; }
 button { padding:5px 10px; margin-top:5px; border-radius:5px; cursor:pointer; border:none; font-weight:bold; background:#00ff99; color:#006622; transition:0.3s; }
 button:hover{ transform: scale(1.1); box-shadow:0 0 10px #0f0; }
-/* صندوق المشاهدين في الزاوية */
-#viewerBox {
-    position:fixed;
-    bottom:20px;
-    left:20px;
-    background: rgba(0,0,0,0.5);
-    padding:10px;
-    border-radius:10px;
-    text-align:left;
-}
+#viewerBox { position:fixed; bottom:20px; left:20px; background: rgba(0,0,0,0.5); padding:10px; border-radius:10px; text-align:left; }
 </style>
 </head>
 <body>
@@ -37,56 +27,62 @@ button:hover{ transform: scale(1.1); box-shadow:0 0 10px #0f0; }
 
 <div class="post-container" id="postsContainer"></div>
 
-<!-- صندوق المشاهدين -->
 <div id="viewerBox">
     <div>الإجمالي الذين دخلوا الموقع: <span id="totalViewers">0</span></div>
     <div>المشاهدون الحاليون: <span id="currentViewers">0</span></div>
 </div>
 
-<script>
-const container = document.getElementById('postsContainer');
-let posts = JSON.parse(localStorage.getItem('posts')) || [];
-let reports = JSON.parse(localStorage.getItem('reports')) || [];
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// إدارة المشاهدين
-let totalViewers = parseInt(localStorage.getItem('totalViewers') || '0');
-let currentViewers = parseInt(localStorage.getItem('currentViewers') || '0');
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYYHodH9RefC7ToNj4SI3nFAtOc6B36CU",
+    authDomain: "issam-b3280.firebaseapp.com",
+    projectId: "issam-b3280",
+    storageBucket: "issam-b3280.firebasestorage.app",
+    messagingSenderId: "767266617594",
+    appId: "1:767266617594:web:4b04e0aeffe4ccc0903143",
+    measurementId: "G-FVZEEHQYGL"
+  };
 
-// عند دخول شخص جديد
-totalViewers++;
-currentViewers++;
-localStorage.setItem('totalViewers', totalViewers);
-localStorage.setItem('currentViewers', currentViewers);
-document.getElementById('totalViewers').innerText = totalViewers;
-document.getElementById('currentViewers').innerText = currentViewers;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-// عند خروج أو إغلاق الصفحة
-window.addEventListener('beforeunload', function(){
-    currentViewers--;
-    if(currentViewers<0) currentViewers=0;
-    localStorage.setItem('currentViewers', currentViewers);
-});
+  // إدارة المشاهدين (تقريبية)
+  let totalViewers = parseInt(localStorage.getItem('totalViewers') || '0');
+  let currentViewers = parseInt(localStorage.getItem('currentViewers') || '0');
+  totalViewers++; currentViewers++;
+  localStorage.setItem('totalViewers', totalViewers);
+  localStorage.setItem('currentViewers', currentViewers);
+  document.getElementById('totalViewers').innerText = totalViewers;
+  document.getElementById('currentViewers').innerText = currentViewers;
+  window.addEventListener('beforeunload', ()=>{ currentViewers--; if(currentViewers<0) currentViewers=0; localStorage.setItem('currentViewers', currentViewers); });
 
-// عرض المنشورات
-function showPosts(){
-    container.innerHTML='';
-    posts.forEach(post=>{
-        const div = document.createElement('div'); div.className='post';
-        div.innerHTML=`<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
-        const reportBtn = document.createElement('button'); reportBtn.innerText='إبلاغ';
-        reportBtn.onclick = ()=>{
-            const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
-            if(reason){
-                reports.push({postUser:post.user,text:post.text,reason});
-                localStorage.setItem('reports', JSON.stringify(reports));
-                alert('تم إرسال البلاغ!');
-            }
+  const postsContainer = document.getElementById('postsContainer');
+
+  // عرض المنشورات realtime
+  const q = query(collection(db,'posts'), orderBy('time','desc'));
+  onSnapshot(q,(snapshot)=>{
+    postsContainer.innerHTML='';
+    snapshot.forEach(doc=>{
+      const post = doc.data();
+      const div = document.createElement('div'); div.className='post';
+      div.innerHTML=`<b>${post.user}</b>: ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
+      const reportBtn = document.createElement('button'); reportBtn.innerText='إبلاغ';
+      reportBtn.onclick = async ()=>{
+        const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
+        if(reason){
+          await addDoc(collection(db,'reports'), {postUser:post.user,text:post.text,reason,time:Date.now()});
+          alert('تم إرسال البلاغ!');
         }
-        div.appendChild(reportBtn);
-        container.appendChild(div);
+      }
+      div.appendChild(reportBtn);
+      postsContainer.appendChild(div);
     });
-}
-showPosts();
+  });
 </script>
+
 </body>
 </html>

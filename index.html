@@ -1,54 +1,93 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>موقعي الشخصي</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>موقعي الشخصي - أخبار وفعاليات</title>
 <style>
-body {
-    font-family:'Arial';
-    background: url('https://i.ibb.co/2N0gK1V/background.jpg') no-repeat center center fixed;
-    background-size: cover;
+  :root{--accent:#00ff99;--dark:#002900}
+  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
+  body{
     color:#fff;
-    margin:0; 
-    padding:20px;
     display:flex;
     flex-direction:column;
     align-items:center;
-}
-.post-container { width:100%; max-width:600px; }
-.post { background: rgba(0,0,0,0.5); padding:10px; margin:10px; border-radius:10px; }
-.post img { max-width:100%; border-radius:10px; margin-top:5px; }
-.instagram {
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#fff;
-    color:#006622;
-    padding:12px 18px;
-    border-radius:50px;
-    font-weight:bold;
-    text-decoration:none;
-    box-shadow:0 0 15px #000;
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
-}
-.instagram:hover { transform: rotate(360deg) scale(1.3); box-shadow:0 0 30px #0f0; }
+    padding:20px;
+    background: linear-gradient(120deg, rgba(0,80,34,0.9), rgba(0,150,80,0.9));
+    overflow-x:hidden;
+  }
+
+  /* تأثير خلفية متحركة بصري */
+  .bg {
+    position:fixed; inset:0; z-index:-1; overflow:hidden;
+  }
+  .blob {
+    position:absolute; width:60vmax; height:60vmax; filter: blur(60px); opacity:0.22;
+    border-radius:50%;
+    animation: float 12s infinite ease-in-out;
+    mix-blend-mode: screen;
+  }
+  .b1{ background: radial-gradient(circle at 30% 30%, #00ff99, transparent 40%); left:-10%; top:-20%; animation-duration:14s;}
+  .b2{ background: radial-gradient(circle at 70% 70%, #00e6ff, transparent 40%); right:-10%; bottom:-10%; animation-duration:18s; }
+  .b3{ background: radial-gradient(circle at 50% 50%, #ffffff, transparent 35%); left:20%; bottom:-20%; animation-duration:22s; opacity:0.12;}
+
+  @keyframes float {
+    0%{transform:translateY(0) scale(1)}
+    50%{transform:translateY(-6vh) scale(1.05)}
+    100%{transform:translateY(0) scale(1)}
+  }
+
+  header{width:100%;max-width:900px;text-align:center;margin-bottom:10px;background:rgba(0,0,0,0.18);padding:18px;border-radius:12px}
+  h1{margin:0 0 6px 0;font-size:22px}
+  p.lead{margin:0;color:#e6ffe9}
+
+  .post-container{width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center}
+  .post{width:100%;background:rgba(0,0,0,0.45);padding:12px;margin:12px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.25)}
+  .post img{max-width:100%;border-radius:8px;margin-top:8px}
+  .post .meta{font-size:13px;opacity:0.9;margin-bottom:6px}
+
+  .report-btn{margin-top:8px;padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:var(--dark);font-weight:700;cursor:pointer}
+  .report-btn:hover{transform:scale(1.03)}
+
+  /* صندوق العداد */
+  #viewerBox{position:fixed;left:16px;bottom:16px;background:rgba(0,0,0,0.45);padding:10px;border-radius:10px;text-align:left}
+  #viewerBox div{font-size:14px;margin:3px 0}
+
+  /* زر الأدمن صغير */
+  .admin-link{position:fixed;right:16px;bottom:16px;background:rgba(255,255,255,0.95);color:var(--dark);padding:10px 14px;border-radius:999px;text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
 
-<h1>موقعي الشخصي - أخبار ومعلومات وفعاليات</h1>
-<p>مرحبا بك في موقعنا، يمكنك مشاهدة أحدث الأخبار والمقالات والفعاليات. إذا لاحظت أي منشور مسيء، يمكنك الإبلاغ عنه من خلال لوحة الإدارة.</p>
+<!-- background blobs -->
+<div class="bg">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
 
-<div class="post-container" id="posts"></div>
+<header>
+  <h1>موقعي الشخصي — أخبار ومعلومات وفعاليات</h1>
+  <p class="lead">أخبار، معلومات، أحداث، مظاهرات، مقالب ... تحذير: أي منشور مسيء يمكن الإبلاغ عنه.</p>
+  <p style="margin-top:8px"><a href="https://www.instagram.com/1x_x.issam.x_x5" target="_blank" style="color:#fff;font-weight:700">حسابي على إنستاغرام: @1x_x.issam.x_x5</a></p>
+</header>
 
-<a href="https://www.instagram.com/1x_x.issam.x_x5" class="instagram" target="_blank">إنستاغرام</a>
+<main class="post-container" id="posts"></main>
 
-<!-- Firebase SDK -->
+<!-- viewer box -->
+<div id="viewerBox">
+  <div>الإجمالي الذين دخلوا الموقع: <span id="totalViewers">0</span></div>
+  <div>المشاهدون حاليا: <span id="currentViewers">0</span></div>
+</div>
+
+<a class="admin-link" href="admin.html" target="_blank">لوحة الأدمن</a>
+
+<!-- Firebase compat SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+/* --- تكوين Firebase (تأكد أنه نفس الكونفيغ في admin.html) --- */
 const firebaseConfig = {
   apiKey: "AIzaSyAYYHodH9RefC7ToNj4SI3nFAtOc6B36CU",
   authDomain: "issam-b3280.firebaseapp.com",
@@ -61,21 +100,92 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const postsContainer = document.getElementById('posts');
+/* --- عداد الزوار (total) وزوار حاليين عبر collection presence --- */
+const visitorIdKey = 'issam_visitor_id_v1';
+let visitorId = sessionStorage.getItem(visitorIdKey);
+if(!visitorId) visitorId = 'v-' + Math.random().toString(36).slice(2,10), sessionStorage.setItem(visitorIdKey, visitorId);
 
-function showPosts(){
-  db.collection('posts').orderBy('time','desc').onSnapshot(snapshot=>{
-    postsContainer.innerHTML='';
-    snapshot.forEach(docSnap=>{
-      const post=docSnap.data();
-      const div=document.createElement('div'); div.className='post';
-      div.innerHTML=`<b>${post.user}</b>: ${post.text}${post.img ? `<br><img src="${post.img}">` : ''}`;
-      postsContainer.appendChild(div);
+const presenceRef = db.collection('presence').doc(visitorId);
+const metaRef = db.collection('meta').doc('counters');
+
+// زيادة العداد الكلي مرة عند الدخول (transaction)
+metaRef.get().then(doc=>{
+  if(!doc.exists){
+    metaRef.set({total:1});
+  } else {
+    metaRef.update({ total: firebase.firestore.FieldValue.increment(1) });
+  }
+}).catch(()=>{ /* ignore */ });
+
+// أنشئ مستند حضور وحدث الطابع الزمني باستمرار
+function touchPresence(){
+  presenceRef.set({ ts: Date.now() }, { merge: true });
+}
+touchPresence();
+const presenceInterval = setInterval(touchPresence, 25000);
+window.addEventListener('beforeunload', ()=> {
+  // حاول حذف مستند الحضور عند الإغلاق
+  presenceRef.delete().catch(()=>{/* ignore */});
+  clearInterval(presenceInterval);
+});
+
+/* عرض القيم الحية: إجمالي */
+metaRef.onSnapshot(snap=>{
+  const data = snap.exists ? snap.data() : {total:0};
+  document.getElementById('totalViewers').innerText = data.total || 0;
+});
+
+/* حساب المشاهدين الحاليين: أي حضور ts ضمن آخر 60 ثانية */
+function listenCurrentViewers(){
+  // نراقب كل مستندات presence ونحسب عددها حسب الطابع الزمني
+  db.collection('presence').onSnapshot(snapshot=>{
+    const now = Date.now();
+    let count = 0;
+    snapshot.forEach(d=>{
+      const data = d.data();
+      if(data && data.ts && (now - data.ts) <= 60000) count++;
     });
+    document.getElementById('currentViewers').innerText = count;
   });
 }
+listenCurrentViewers();
 
-showPosts();
+/* --- عرض المنشورات والحصول على بلاغات --- */
+const postsContainer = document.getElementById('posts');
+
+function renderPostElement(postData, id){
+  const el = document.createElement('div');
+  el.className = 'post';
+  const user = document.createElement('div'); user.className='meta'; user.innerText = postData.user + ' • ' + new Date(postData.time).toLocaleString();
+  const body = document.createElement('div'); body.innerHTML = escapeHtml(postData.text);
+  el.appendChild(user);
+  el.appendChild(body);
+  if(postData.img){
+    const img = document.createElement('img'); img.src = postData.img; img.alt = '';
+    el.appendChild(img);
+  }
+  const rbtn = document.createElement('button'); rbtn.className='report-btn'; rbtn.innerText='إبلاغ';
+  rbtn.onclick = ()=> {
+    const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
+    if(reason && reason.trim()){
+      db.collection('reports').add({ postId:id, postUser:postData.user, text:postData.text, reason:reason.trim(), time:Date.now() });
+      alert('تم إرسال البلاغ إلى الإدارة.');
+    }
+  };
+  el.appendChild(rbtn);
+  return el;
+}
+
+function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+/* جلب المنشورات realtime */
+db.collection('posts').orderBy('time','desc').onSnapshot(snapshot=>{
+  postsContainer.innerHTML='';
+  snapshot.forEach(docSnap=>{
+    const post = docSnap.data();
+    postsContainer.appendChild(renderPostElement(post, docSnap.id));
+  });
+});
 </script>
 </body>
 </html>

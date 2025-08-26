@@ -3,12 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم - Firebase</title>
+<title>لوحة التحكم</title>
 <style>
-body { font-family:'Arial'; background: linear-gradient(135deg,#006622,#00ff99); color:#fff; padding:20px; display:flex; flex-direction:column; align-items:center; }
-input, textarea, button { margin:5px; padding:10px; border-radius:10px; border:none; }
-.post { background: rgba(0,0,0,0.4); padding:10px; margin:10px; border-radius:10px; position:relative; }
-.delete-btn { position:absolute; top:10px; right:10px; background:red; color:white; border-radius:5px; padding:5px; cursor:pointer; }
+body {
+    font-family:'Arial'; 
+    background: url('https://i.ibb.co/2N0gK1V/background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color:#fff; 
+    padding:20px; 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center;
+}
+input, textarea, button { 
+    margin:5px; 
+    padding:10px; 
+    border-radius:10px; 
+    border:none; 
+}
+.post { 
+    background: rgba(0,0,0,0.5); 
+    padding:10px; 
+    margin:10px; 
+    border-radius:10px; 
+    position:relative; 
+}
+.delete-btn { 
+    position:absolute; 
+    top:10px; 
+    right:10px; 
+    background:red; 
+    color:white; 
+    border-radius:5px; 
+    padding:5px; 
+    cursor:pointer; 
+}
 </style>
 </head>
 <body>
@@ -39,10 +68,11 @@ input, textarea, button { margin:5px; padding:10px; border-radius:10px; border:n
 <div id="postsContainer"></div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYYHodH9RefC7ToNj4SI3nFAtOc6B36CU",
   authDomain: "issam-b3280.firebaseapp.com",
@@ -52,19 +82,18 @@ const firebaseConfig = {
   appId: "1:767266617594:web:4b04e0aeffe4ccc0903143",
   measurementId: "G-FVZEEHQYGL"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const publishPassword = '1234';           // كلمة سر الدخول
-const adminDeletePass = '12345678910';    // كلمة سر حذف المستخدمين
+const publishPassword = '1234';
+const adminDeletePass = '12345678910';
 let currentUser='';
 
 function loginUser(){
   const name=document.getElementById('username').value.trim();
   const pass=document.getElementById('userpass').value.trim();
   if(!name || !pass){ alert('أدخل الاسم وكلمة المرور'); return; }
-  if(pass!==publishPassword){ alert('كلمة مرور خاطئة'); return; }
+  if(pass !== publishPassword){ alert('كلمة المرور خاطئة'); return; }
   currentUser=name;
   document.getElementById('loginPanel').style.display='none';
   document.getElementById('publishPanel').style.display='block';
@@ -72,29 +101,29 @@ function loginUser(){
   alert('تم الدخول للوحة النشر!');
 }
 
-async function addUser(name){
-  await setDoc(doc(db,'users',name),{name});
+function addUser(name){
+  db.collection('users').doc(name).set({name});
 }
 
-async function addPost(){
+function addPost(){
   const text=document.getElementById('postText').value.trim();
   const img=document.getElementById('postImg').value.trim();
   if(!text){ alert('أدخل نص المنشور'); return; }
-  await addDoc(collection(db,'posts'), {text,img,user:currentUser,time:Date.now()});
-  document.getElementById('postText').value=''; document.getElementById('postImg').value='';
+  db.collection('posts').add({text,img,user:currentUser,time:Date.now()});
+  document.getElementById('postText').value='';
+  document.getElementById('postImg').value='';
 }
 
 function showPosts(){
   const container=document.getElementById('postsContainer');
-  const q=query(collection(db,'posts'), orderBy('time','desc'));
-  onSnapshot(q,(snapshot)=>{
+  db.collection('posts').orderBy('time','desc').onSnapshot(snapshot=>{
     container.innerHTML='';
     snapshot.forEach(docSnap=>{
       const post=docSnap.data();
       const div=document.createElement('div'); div.className='post';
-      div.innerHTML=`<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
+      div.innerHTML=`<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}" style="max-width:100%; border-radius:10px;">` : ''}`;
       const delBtn=document.createElement('button'); delBtn.className='delete-btn'; delBtn.innerText='حذف';
-      delBtn.onclick=()=>{ deleteDoc(doc(db,'posts',docSnap.id)); }
+      delBtn.onclick=()=>{ docSnap.ref.delete(); }
       div.appendChild(delBtn);
       container.appendChild(div);
     });
@@ -103,14 +132,14 @@ function showPosts(){
 
 function showUsers(){
   const div=document.getElementById('userList');
-  onSnapshot(collection(db,'users'),snapshot=>{
+  db.collection('users').onSnapshot(snapshot=>{
     div.innerHTML='';
     snapshot.forEach(docSnap=>{
       const user=docSnap.data().name;
       const d=document.createElement('div'); d.innerText=user; d.style.cursor='pointer';
       d.onclick=()=>{
         if(prompt('أدخل كلمة مرور الحذف')===adminDeletePass){
-          deleteDoc(doc(db,'users',user));
+          docSnap.ref.delete();
         }
       }
       div.appendChild(d);
@@ -120,7 +149,7 @@ function showUsers(){
 
 function showReports(){
   const div=document.getElementById('reportList');
-  onSnapshot(collection(db,'reports'),snapshot=>{
+  db.collection('reports').onSnapshot(snapshot=>{
     div.innerHTML='';
     snapshot.forEach(docSnap=>{
       const rep=docSnap.data();

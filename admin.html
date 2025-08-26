@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم - النشر والإدارة</title>
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg,#006622,#00ff99);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+}
+h1,h2,h3 { text-align:center; }
+input, textarea { width:300px; padding:10px; margin:5px 0; border-radius:10px; border:none; }
+button {
+    padding:10px 20px;
+    margin:5px;
+    border-radius:10px;
+    border:none;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s ease;
+}
+button:hover { transform: scale(1.1); box-shadow:0 0 15px #0f0; }
+.post { background: rgba(0,0,0,0.4); padding:10px; margin:10px; border-radius:10px; position:relative; }
+.post img { max-width:100%; border-radius:8px; margin-top:5px; transition:0.3s; }
+.post img:hover { transform: scale(1.1); box-shadow:0 0 20px #0f0; }
+.delete-btn { position:absolute; top:10px; right:10px; background:red; color:white; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#reportList { background: rgba(255,255,255,0.1); padding:10px; border-radius:10px; max-width:400px; margin-top:10px; overflow:auto; max-height:200px; }
+.report-item { margin:5px 0; padding:5px; background: rgba(0,255,0,0.2); border-radius:5px; }
+</style>
+</head>
+<body>
+
+<h1>لوحة التحكم - النشر والإدارة</h1>
+
+<div id="loginPanel">
+    <h2>تسجيل الدخول للنشر</h2>
+    <label>الاسم:</label>
+    <input type="text" id="username" placeholder="أدخل اسمك"><br>
+    <label>كلمة المرور:</label>
+    <input type="password" id="userpass" placeholder="كلمة مرور النشر"><br>
+    <button onclick="loginUser()">دخول</button>
+</div>
+
+<div id="publishPanel" style="display:none; width:100%; max-width:600px;">
+    <h2>النشر</h2>
+    <textarea id="postText" placeholder="نص المنشور"></textarea><br>
+    <input type="text" id="postImg" placeholder="رابط الصورة (اختياري)"><br>
+    <button onclick="addPost()">نشر</button>
+
+    <h3>الأسماء المسجلة بالدخول</h3>
+    <div id="userList"></div>
+
+    <h3>البلاغات</h3>
+    <div id="reportList"></div>
+
+    <h3>المنشورات</h3>
+    <div id="postsContainer"></div>
+</div>
+
+<script>
+// إعدادات
+let publishPassword = '1234';
+const adminDeletePass = '12345678910';
+
+let currentUser = '';
+let posts = JSON.parse(localStorage.getItem('posts')) || [];
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let reports = JSON.parse(localStorage.getItem('reports')) || [];
+
+// تسجيل الدخول
+function loginUser(){
+    const name = document.getElementById('username').value.trim();
+    const pass = document.getElementById('userpass').value.trim();
+    if(!name || !pass){ alert('أدخل الاسم وكلمة المرور'); return; }
+    if(pass !== publishPassword){ alert('كلمة مرور خاطئة'); return; }
+    currentUser = name;
+    if(!users.includes(name)){ users.push(name); localStorage.setItem('users', JSON.stringify(users)); }
+    document.getElementById('loginPanel').style.display='none';
+    document.getElementById('publishPanel').style.display='block';
+    showUsers(); showPosts(); showReports();
+    alert('تم الدخول للوحة النشر!');
+}
+
+// إضافة منشور
+function addPost(){
+    const text = document.getElementById('postText').value.trim();
+    const img = document.getElementById('postImg').value.trim();
+    if(!text){ alert('أدخل نص المنشور'); return; }
+    posts.unshift({text,img,user:currentUser});
+    localStorage.setItem('posts', JSON.stringify(posts));
+    document.getElementById('postText').value=''; document.getElementById('postImg').value='';
+    showPosts();
+}
+
+// عرض المنشورات مع حذف
+function showPosts(){
+    const container = document.getElementById('postsContainer');
+    container.innerHTML='';
+    posts.forEach((post,index)=>{
+        const div = document.createElement('div');
+        div.className='post';
+        div.innerHTML = `<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
+        const delBtn = document.createElement('button');
+        delBtn.className='delete-btn';
+        delBtn.innerText='حذف';
+        delBtn.onclick=()=>{ posts.splice(index,1); localStorage.setItem('posts', JSON.stringify(posts)); showPosts(); }
+        div.appendChild(delBtn);
+        container.appendChild(div);
+    });
+}
+
+// عرض المستخدمين
+function showUsers(){
+    const div = document.getElementById('userList'); div.innerHTML='';
+    users.forEach((u,idx)=>{
+        const d = document.createElement('div'); d.innerText=u; d.style.cursor='pointer';
+        d.onclick=()=>{ if(prompt('أدخل كلمة مرور الحذف')===adminDeletePass){ users.splice(idx,1); localStorage.setItem('users', JSON.stringify(users)); showUsers(); } }
+        div.appendChild(d);
+    });
+}
+
+// عرض البلاغات
+function showReports(){
+    const div = document.getElementById('reportList'); div.innerHTML='';
+    reports.forEach(rep=>{
+        const d = document.createElement('div'); d.className='report-item';
+        d.innerHTML=`<b>${rep.postUser}</b>: ${rep.text}<br>السبب: ${rep.reason}`;
+        div.appendChild(d);
+    });
+}
+</script>
+</body>
+</html>

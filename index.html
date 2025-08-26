@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>موقع الأخبار والفعاليات</title>
+<style>
+body { font-family:'Arial',sans-serif; background: linear-gradient(135deg,#00ff99,#006622); color:#fff; padding:20px; margin:0; }
+header { text-align:center; padding:20px; background: rgba(0,0,0,0.3); border-radius:15px; margin-bottom:20px; }
+header a { color:#fff; font-weight:bold; text-decoration:none; }
+.post-container { display:flex; flex-direction:column; align-items:center; }
+.post { background: rgba(0,0,0,0.5); padding:15px; margin:10px; border-radius:15px; width:90%; max-width:600px; transition: transform 0.3s ease; }
+.post:hover { transform: scale(1.02); box-shadow:0 0 15px #0f0; }
+.post img { max-width:100%; border-radius:10px; margin-top:5px; }
+button { padding:5px 10px; margin-top:5px; border-radius:5px; cursor:pointer; border:none; font-weight:bold; background:#00ff99; color:#006622; transition:0.3s; }
+button:hover{ transform: scale(1.1); box-shadow:0 0 10px #0f0; }
+/* صندوق المشاهدين في الزاوية */
+#viewerBox {
+    position:fixed;
+    bottom:20px;
+    left:20px;
+    background: rgba(0,0,0,0.5);
+    padding:10px;
+    border-radius:10px;
+    text-align:left;
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>موقع الأخبار والمعلومات والفعاليات</h1>
+<p>أخبار، معلومات، أحداث، مظاهرات، مقالب ...</p>
+<p style="color:#ff0;">تحذير: أي منشور مسيء يمكن الإبلاغ عنه.</p>
+<p>حسابي على إنستاغرام: <a href="https://www.instagram.com/1x_x.issam.x_x5" target="_blank">@1x_x.issam.x_x5</a></p>
+</header>
+
+<div class="post-container" id="postsContainer"></div>
+
+<!-- صندوق المشاهدين -->
+<div id="viewerBox">
+    <div>الإجمالي الذين دخلوا الموقع: <span id="totalViewers">0</span></div>
+    <div>المشاهدون الحاليون: <span id="currentViewers">0</span></div>
+</div>
+
+<script>
+const container = document.getElementById('postsContainer');
+let posts = JSON.parse(localStorage.getItem('posts')) || [];
+let reports = JSON.parse(localStorage.getItem('reports')) || [];
+
+// إدارة المشاهدين
+let totalViewers = parseInt(localStorage.getItem('totalViewers') || '0');
+let currentViewers = parseInt(localStorage.getItem('currentViewers') || '0');
+
+// عند دخول شخص جديد
+totalViewers++;
+currentViewers++;
+localStorage.setItem('totalViewers', totalViewers);
+localStorage.setItem('currentViewers', currentViewers);
+document.getElementById('totalViewers').innerText = totalViewers;
+document.getElementById('currentViewers').innerText = currentViewers;
+
+// عند خروج أو إغلاق الصفحة
+window.addEventListener('beforeunload', function(){
+    currentViewers--;
+    if(currentViewers<0) currentViewers=0;
+    localStorage.setItem('currentViewers', currentViewers);
+});
+
+// عرض المنشورات
+function showPosts(){
+    container.innerHTML='';
+    posts.forEach(post=>{
+        const div = document.createElement('div'); div.className='post';
+        div.innerHTML=`<b>${post.user}:</b> ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
+        const reportBtn = document.createElement('button'); reportBtn.innerText='إبلاغ';
+        reportBtn.onclick = ()=>{
+            const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
+            if(reason){
+                reports.push({postUser:post.user,text:post.text,reason});
+                localStorage.setItem('reports', JSON.stringify(reports));
+                alert('تم إرسال البلاغ!');
+            }
+        }
+        div.appendChild(reportBtn);
+        container.appendChild(div);
+    });
+}
+showPosts();
+</script>
+</body>
+</html>

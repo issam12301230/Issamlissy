@@ -32,56 +32,52 @@ button:hover{ transform: scale(1.1); box-shadow:0 0 10px #0f0; }
     <div>المشاهدون الحاليون: <span id="currentViewers">0</span></div>
 </div>
 
-<!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYYHodH9RefC7ToNj4SI3nFAtOc6B36CU",
-    authDomain: "issam-b3280.firebaseapp.com",
-    projectId: "issam-b3280",
-    storageBucket: "issam-b3280.firebasestorage.app",
-    messagingSenderId: "767266617594",
-    appId: "1:767266617594:web:4b04e0aeffe4ccc0903143",
-    measurementId: "G-FVZEEHQYGL"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyAYYHodH9RefC7ToNj4SI3nFAtOc6B36CU",
+  authDomain: "issam-b3280.firebaseapp.com",
+  projectId: "issam-b3280",
+  storageBucket: "issam-b3280.firebasestorage.app",
+  messagingSenderId: "767266617594",
+  appId: "1:767266617594:web:4b04e0aeffe4ccc0903143",
+  measurementId: "G-FVZEEHQYGL"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // إدارة المشاهدين (تقريبية)
-  let totalViewers = parseInt(localStorage.getItem('totalViewers') || '0');
-  let currentViewers = parseInt(localStorage.getItem('currentViewers') || '0');
-  totalViewers++; currentViewers++;
-  localStorage.setItem('totalViewers', totalViewers);
-  localStorage.setItem('currentViewers', currentViewers);
-  document.getElementById('totalViewers').innerText = totalViewers;
-  document.getElementById('currentViewers').innerText = currentViewers;
-  window.addEventListener('beforeunload', ()=>{ currentViewers--; if(currentViewers<0) currentViewers=0; localStorage.setItem('currentViewers', currentViewers); });
+let totalViewers = parseInt(localStorage.getItem('totalViewers') || '0');
+let currentViewers = parseInt(localStorage.getItem('currentViewers') || '0');
+totalViewers++; currentViewers++;
+localStorage.setItem('totalViewers', totalViewers);
+localStorage.setItem('currentViewers', currentViewers);
+document.getElementById('totalViewers').innerText = totalViewers;
+document.getElementById('currentViewers').innerText = currentViewers;
+window.addEventListener('beforeunload', ()=>{ currentViewers--; if(currentViewers<0) currentViewers=0; localStorage.setItem('currentViewers', currentViewers); });
 
-  const postsContainer = document.getElementById('postsContainer');
-
-  // عرض المنشورات realtime
-  const q = query(collection(db,'posts'), orderBy('time','desc'));
-  onSnapshot(q,(snapshot)=>{
-    postsContainer.innerHTML='';
-    snapshot.forEach(doc=>{
-      const post = doc.data();
-      const div = document.createElement('div'); div.className='post';
-      div.innerHTML=`<b>${post.user}</b>: ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
-      const reportBtn = document.createElement('button'); reportBtn.innerText='إبلاغ';
-      reportBtn.onclick = async ()=>{
-        const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
-        if(reason){
-          await addDoc(collection(db,'reports'), {postUser:post.user,text:post.text,reason,time:Date.now()});
-          alert('تم إرسال البلاغ!');
-        }
+const postsContainer = document.getElementById('postsContainer');
+const q = query(collection(db,'posts'), orderBy('time','desc'));
+onSnapshot(q,(snapshot)=>{
+  postsContainer.innerHTML='';
+  snapshot.forEach(doc=>{
+    const post = doc.data();
+    const div = document.createElement('div'); div.className='post';
+    div.innerHTML=`<b>${post.user}</b>: ${post.text}${post.img? `<br><img src="${post.img}">` : ''}`;
+    const reportBtn = document.createElement('button'); reportBtn.innerText='إبلاغ';
+    reportBtn.onclick = async ()=>{
+      const reason = prompt('اكتب سبب الإبلاغ عن هذا المنشور:');
+      if(reason){
+        await addDoc(collection(db,'reports'), {postUser:post.user,text:post.text,reason,time:Date.now()});
+        alert('تم إرسال البلاغ!');
       }
-      div.appendChild(reportBtn);
-      postsContainer.appendChild(div);
-    });
+    }
+    div.appendChild(reportBtn);
+    postsContainer.appendChild(div);
   });
+});
 </script>
 
 </body>

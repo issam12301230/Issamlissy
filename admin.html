@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم Firebase</title>
+<title>لوحة التحكم - Firebase</title>
 <style>
 body { font-family:'Arial'; background: linear-gradient(135deg,#006622,#00ff99); color:#fff; padding:20px; display:flex; flex-direction:column; align-items:center; }
 input, textarea, button { margin:5px; padding:10px; border-radius:10px; border:none; }
@@ -13,12 +13,12 @@ input, textarea, button { margin:5px; padding:10px; border-radius:10px; border:n
 </head>
 <body>
 
-<h1>لوحة التحكم - Firebase</h1>
+<h1>لوحة التحكم</h1>
 
 <div id="loginPanel">
 <label>الاسم:</label>
 <input type="text" id="username"><br>
-<label>كلمة مرور:</label>
+<label>كلمة المرور:</label>
 <input type="password" id="userpass"><br>
 <button onclick="loginUser()">دخول</button>
 </div>
@@ -56,8 +56,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const publishPassword = '1234';
-const adminDeletePass = '12345678910';
+const publishPassword = '1234';           // كلمة سر الدخول
+const adminDeletePass = '12345678910';    // كلمة سر حذف المستخدمين
 let currentUser='';
 
 function loginUser(){
